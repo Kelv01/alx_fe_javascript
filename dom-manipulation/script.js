@@ -1,11 +1,25 @@
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuote = document.getElementById('newQuote');
 
-const quotes = [
-  { text: "The best way to predict the future is to invent it.", category: "inspiration" },
-  { text: "Life is 10% what happens to us and 90% how we react to it.", category: "life" },
-  { text: "Do one thing every day that scares you.", category: "courage" },
-];
+let quotes = [];
+
+// Load from localStorage if available
+const savedQuotes = localStorage.getItem('quotes');
+if (savedQuotes) {
+  quotes = JSON.parse(savedQuotes);
+} else {
+  quotes = [
+    { text: "The best way to predict the future is to invent it.", category: "inspiration" },
+    { text: "Life is 10% what happens to us and 90% how we react to it.", category: "life" },
+    { text: "Do one thing every day that scares you.", category: "courage" },
+  ];
+  saveQuotes();
+}
+
+// Save to localStorage
+function saveQuotes() {
+  localStorage.setItem('quotes', JSON.stringify(quotes));
+}
 
 // Display a random quote
 function showRandomQuote() {
@@ -16,11 +30,24 @@ function showRandomQuote() {
     <p>"${quote.text}"</p>
     <small><em>Category: ${quote.category}</em></small>
   `;
+
+  // Save last viewed quote in sessionStorage
+  sessionStorage.setItem('lastViewedQuote', JSON.stringify(quote));
 }
 
 newQuote.addEventListener('click', showRandomQuote);
 
-// Dynamically create the form to add a new quote
+// Show last viewed quote from sessionStorage (if available)
+const lastQuote = sessionStorage.getItem('lastViewedQuote');
+if (lastQuote) {
+  const quote = JSON.parse(lastQuote);
+  quoteDisplay.innerHTML = `
+    <p>"${quote.text}"</p>
+    <small><em>Category: ${quote.category}</em></small>
+  `;
+}
+
+// Create the add-quote form dynamically
 function createAddQuoteForm() {
   const formContainer = document.createElement('div');
 
@@ -45,13 +72,17 @@ function createAddQuoteForm() {
   document.body.appendChild(formContainer);
 }
 
-// Called by the dynamically created button
+createAddQuoteForm();
+
+// Add new quote to list and localStorage
 function addQuote() {
   const newText = document.getElementById('newQuoteText').value.trim();
   const newCategory = document.getElementById('newQuoteCategory').value.trim();
 
   if (newText && newCategory) {
     quotes.push({ text: newText, category: newCategory });
+    saveQuotes();
+
     alert("Quote added!");
     document.getElementById('newQuoteText').value = '';
     document.getElementById('newQuoteCategory').value = '';
@@ -60,10 +91,7 @@ function addQuote() {
   }
 }
 
-// Call the form builder on load
-createAddQuoteForm();
-
-// Export quotes to a downloadable JSON file
+// Export quotes to JSON file
 function exportToJson() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
@@ -77,7 +105,7 @@ function exportToJson() {
   document.body.removeChild(link);
 }
 
-// Import quotes from uploaded JSON file
+// Import quotes from JSON file
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
 
