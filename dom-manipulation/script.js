@@ -199,8 +199,16 @@ async function syncWithServer() {
   }
 }
 
+// ✅ Wrapper for external trigger
+function syncQuotes() {
+  syncWithServer();
+}
+
+
 // Init
 createAddQuoteForm();
 populateCategories();
 syncWithServer();
-setInterval(syncWithServer, 20000);
+syncQuotes();
+setInterval(syncQuotes, 20000);
+
