@@ -43,3 +43,4 @@ function addQuote() {
     alert("Please fill in both the quote and category.");
   }
 }
+addQuote();
