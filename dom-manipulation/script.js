@@ -1,6 +1,6 @@
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuote = document.getElementById('newQuote');
-const SERVER_URL = "https://mocki.io/v1/2e263aba-45b3-4e5d-8c99-5a2304c31c8b"; // temporary demo endpoint
+const SERVER_URL = "https://mocki.io/v1/2e263aba-45b3-4e5d-8c99-5a2304c31c8b"; // Replace with your own later
 
 let quotes = [];
 
@@ -21,7 +21,6 @@ function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
-// Show a random quote
 function showRandomQuote(filteredQuotes = null) {
   const availableQuotes = filteredQuotes || quotes;
   if (availableQuotes.length === 0) {
@@ -40,6 +39,7 @@ function showRandomQuote(filteredQuotes = null) {
   sessionStorage.setItem('lastViewedQuote', JSON.stringify(quote));
 }
 
+// Show last quote if available
 const lastQuote = sessionStorage.getItem('lastViewedQuote');
 if (lastQuote) {
   const quote = JSON.parse(lastQuote);
@@ -159,13 +159,18 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// 🚀 SERVER SYNC FEATURE
+// ✅ NEW: Fetch quotes from the server (used in sync)
+async function fetchQuotesFromServer() {
+  const res = await fetch(SERVER_URL);
+  if (!res.ok) throw new Error("Failed to fetch from server");
+  return await res.json();
+}
+
+// ✅ NEW: Sync with server and resolve conflicts
 async function syncWithServer() {
   try {
-    const res = await fetch(SERVER_URL);
-    const serverQuotes = await res.json();
+    const serverQuotes = await fetchQuotesFromServer();
 
-    // Basic conflict resolution: server wins
     const updated = JSON.stringify(serverQuotes) !== JSON.stringify(quotes);
     if (updated) {
       quotes = serverQuotes;
@@ -178,10 +183,8 @@ async function syncWithServer() {
   }
 }
 
-// ⏲️ Check server every 20 seconds
-setInterval(syncWithServer, 20000);
-
-// Initial setup
+// Initial run + auto-sync every 20 seconds
 createAddQuoteForm();
 populateCategories();
-syncWithServer(); // Initial sync
+syncWithServer();
+setInterval(syncWithServer, 20000);
