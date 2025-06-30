@@ -62,3 +62,39 @@ function addQuote() {
 
 // Call the form builder on load
 createAddQuoteForm();
+
+// Export quotes to a downloadable JSON file
+function exportToJson() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'quotes.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Import quotes from uploaded JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+
+  fileReader.onload = function(event) {
+    try {
+      const importedQuotes = JSON.parse(event.target.result);
+      if (Array.isArray(importedQuotes)) {
+        quotes.push(...importedQuotes);
+        saveQuotes();
+        alert('Quotes imported successfully!');
+      } else {
+        alert('Invalid file format!');
+      }
+    } catch (e) {
+      alert('Error reading file: ' + e.message);
+    }
+  };
+
+  fileReader.readAsText(event.target.files[0]);
+}
