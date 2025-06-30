@@ -1,10 +1,10 @@
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuote = document.getElementById('newQuote');
-const SERVER_URL = "https://mocki.io/v1/2e263aba-45b3-4e5d-8c99-5a2304c31c8b"; // Replace with your own later
+const SERVER_URL = "https://mocki.io/v1/2e263aba-45b3-4e5d-8c99-5a2304c31c8b"; // Replace later
+const POST_URL = "https://jsonplaceholder.typicode.com/posts";
 
 let quotes = [];
 
-// Load from localStorage if available
 const savedQuotes = localStorage.getItem('quotes');
 if (savedQuotes) {
   quotes = JSON.parse(savedQuotes);
@@ -39,7 +39,6 @@ function showRandomQuote(filteredQuotes = null) {
   sessionStorage.setItem('lastViewedQuote', JSON.stringify(quote));
 }
 
-// Show last quote if available
 const lastQuote = sessionStorage.getItem('lastViewedQuote');
 if (lastQuote) {
   const quote = JSON.parse(lastQuote);
@@ -88,9 +87,11 @@ function addQuote() {
   const newCategory = document.getElementById('newQuoteCategory').value.trim();
 
   if (newText && newCategory) {
-    quotes.push({ text: newText, category: newCategory });
+    const newQuote = { text: newText, category: newCategory };
+    quotes.push(newQuote);
     saveQuotes();
     populateCategories();
+    pushQuoteToServer(newQuote); // ✅ POST to server
     alert("Quote added!");
     document.getElementById('newQuoteText').value = '';
     document.getElementById('newQuoteCategory').value = '';
@@ -159,18 +160,33 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// ✅ NEW: Fetch quotes from the server (used in sync)
+// ✅ POST new quote to jsonplaceholder.typicode.com
+async function pushQuoteToServer(quote) {
+  try {
+    const response = await fetch(POST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(quote)
+    });
+
+    const data = await response.json();
+    console.log("Server accepted quote:", data);
+  } catch (error) {
+    console.error("Error posting to server:", error);
+  }
+}
+
+// ✅ FETCH quotes from server
 async function fetchQuotesFromServer() {
   const res = await fetch(SERVER_URL);
   if (!res.ok) throw new Error("Failed to fetch from server");
   return await res.json();
 }
 
-// ✅ NEW: Sync with server and resolve conflicts
+// ✅ SYNC with server every 20s
 async function syncWithServer() {
   try {
     const serverQuotes = await fetchQuotesFromServer();
-
     const updated = JSON.stringify(serverQuotes) !== JSON.stringify(quotes);
     if (updated) {
       quotes = serverQuotes;
@@ -183,7 +199,7 @@ async function syncWithServer() {
   }
 }
 
-// Initial run + auto-sync every 20 seconds
+// Init
 createAddQuoteForm();
 populateCategories();
 syncWithServer();
