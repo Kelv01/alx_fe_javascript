@@ -192,7 +192,8 @@ async function syncWithServer() {
       quotes = serverQuotes;
       saveQuotes();
       populateCategories();
-      alert("Quotes synced from server. Your local quotes have been updated.");
+      alert("Quotes synced with server!");
+
     }
   } catch (err) {
     console.error("Server sync failed:", err.message);
